@@ -1,0 +1,30 @@
+Package: maxdiffr
+Title: MaxDiff (Best-Worst Scaling) Analysis Pipeline
+Version: 0.1.0
+Authors@R: person("Loren", "Collingwood", email = "loren.collingwood@gmail.com",
+                  role = c("aut", "cre"))
+Description: A complete pipeline for MaxDiff (Best-Worst Scaling) survey analysis.
+    Includes IBD design generation, response validation, data preparation (standard
+    and anchored), aggregate and individual-level analysis via empirical Bayes,
+    anchored 100-point scaling, TURF analysis with portfolio optimization, and
+    publication-ready plots.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    tidyr,
+    ggplot2,
+    rlang,
+    ibd,
+    questionr,
+    stats,
+    utils
+Depends:
+    R (>= 4.0)
+LazyData: true
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
