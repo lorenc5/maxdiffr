@@ -1,6 +1,71 @@
-# maxdiffr
+# maxdiffr <img src="man/figures/logo.png" align="right" height="139" />
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/lorenc5/maxdiffr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lorenc5/maxdiffr/actions/workflows/R-CMD-check.yaml)
+[![Style](https://github.com/lorenc5/maxdiffr/actions/workflows/style.yaml/badge.svg)](https://github.com/lorenc5/maxdiffr/actions/workflows/style.yaml)
+<!-- badges: end -->
 
 A complete pipeline for **MaxDiff (Best-Worst Scaling)** survey analysis in R.
+
+## Background: MaxDiff and Best-Worst Scaling
+
+### What is MaxDiff?
+
+MaxDiff (Maximum Difference Scaling), also known as **Best-Worst Scaling (BWS)**, is a survey-based method for measuring the relative importance or preference of a set of items. Respondents see subsets of items on successive screens and, for each screen, choose the **best** (most important/preferred) and **worst** (least important/preferred) item. This forced-choice design avoids common survey pitfalls like scale-use bias --- respondents cannot simply rate everything as "very important."
+
+Each best-worst choice reveals the maximum perceptual difference in the respondent's mind, providing stronger signal per question than a standard Likert rating. With enough screens, every item appears an equal number of times, so each item is evaluated on a level playing field.
+
+### Balanced Incomplete Block Designs (BIBD)
+
+A MaxDiff survey relies on a **balanced incomplete block design (BIBD)** to determine which items appear on each screen. In a BIBD:
+
+- There are *b* blocks (screens) and *v* items total.
+- Each block shows *k* items (where *k* < *v*).
+- Every item appears the same number of times across all blocks.
+- Every pair of items appears together the same number of times.
+
+This balance ensures that comparisons between items are equally informed by the data. For example, with 8 items and 4 items per screen, a BIBD with 8 blocks can be constructed where each item appears exactly 4 times and each pair co-occurs exactly once. `maxdiffr` wraps the `ibd` package to generate these designs automatically.
+
+When a study has many respondents, **multiple design versions** can be used: each version uses a different randomized mapping of items to blocks, so that any residual order or position effects are averaged out across the sample.
+
+### How It Works in Practice
+
+A typical MaxDiff project follows this workflow:
+
+1. **Researcher creates a design** specifying items, blocks, and versions.
+2. **Survey company programs the instrument** using the design file, which maps item numbers to screen positions.
+3. **Respondents complete the survey**, seeing one screen at a time.
+4. **Data is exported** (e.g., as an SPSS `.sav` file) with one row per respondent and columns encoding their best/worst choices per screen.
+5. **Analyst runs the pipeline** (validate, prep, aggregate, individual scoring, optionally anchor and TURF).
+
+### Example Survey Screen
+
+Imagine a study measuring which policy messages resonate most. The design file assigns items 2, 5, 3, and 7 to Screen 1 for Version 1. The survey platform renders:
+
+> **Screen 1 of 8**
+>
+> Please review the following statements. Select the one you find **MOST important** and the one you find **LEAST important**.
+>
+> | Least Important |  Statement                                      | Most Important |
+> |:---:|:--------------------------------------------------|:---:|
+> |  O  | Lower energy costs for families                 |  O  |
+> |  O  | Protect public lands and national parks          |  O  |
+> |  O  | Invest in clean energy jobs                      |  O  |
+> |  O  | Reduce dependence on foreign oil                 |  O  |
+
+The respondent selects one radio button in the "Least Important" column and one in the "Most Important" column.
+
+### The Anchor Question
+
+Standard MaxDiff produces **relative** scores --- you learn that item A is preferred over item B, but not whether respondents actually care about either. **Anchored MaxDiff** adds an absolute reference point with a follow-up question after each screen:
+
+> **Thinking about ALL of the statements you just saw on this screen, would you say...**
+>
+> - ( ) **ALL** of them are important to me
+> - ( ) **SOME** of them are important to me
+> - ( ) **NONE** of them are important to me
+
+This response is coded as a pseudo-item called ANCHOR. If a respondent says ALL are important, the anchor is treated as *worse* than the shown items (anchor = -1 in the BW coding). If NONE are important, the anchor is *better* than the shown items (anchor = 1). SOME places the anchor in the middle (anchor = 0). After estimation, all item scores are rescaled relative to the anchor = 100 on a 100-point scale. Items scoring above 100 are genuinely valued; items below 100 are not.
 
 ## Installation
 
@@ -15,7 +80,7 @@ devtools::install_github("lorenc5/maxdiffr")
 
 The pipeline has six stages:
 
-1. **Design** --- Generate an IBD design for the survey
+1. **Design** --- Generate a BIBD design for the survey
 2. **Validate** --- Check that survey responses match the design
 3. **Prep** --- Convert raw survey data to long-format BW data
 4. **Analyze** --- Aggregate and individual-level scoring
@@ -105,25 +170,25 @@ Items not shown in a given block are excluded (not coded as 0 --- they simply do
 
 ### The AE-MNL Model
 
-The beta coefficient for each item *i* is the log-ratio of best to worst counts:
+The beta coefficient for each item $i$ is the log-ratio of best to worst counts:
 
-**beta_i = ln(B_i / W_i)**
+$$\beta_i = \ln\!\left(\frac{B_i}{W_i}\right)$$
 
-where *B_i* and *W_i* are the number of times item *i* was chosen as best and worst, respectively. A continuity correction of 0.5 is applied when either count is zero.
+where $B_i$ and $W_i$ are the number of times item $i$ was chosen as best and worst, respectively. A continuity correction of 0.5 is applied when either count is zero.
 
 The standard error is:
 
-**SE_i = sqrt(1/B_i + 1/W_i)**
+$$\text{SE}_i = \sqrt{\frac{1}{B_i} + \frac{1}{W_i}}$$
 
-Betas are converted to choice probabilities via the **softmax** function, which gives the probability that item *i* would be chosen as best if all items were shown simultaneously:
+Betas are converted to choice probabilities via the **softmax** function, which gives the probability that item $i$ would be chosen as best if all items were shown simultaneously:
 
-**P_i = exp(beta_i) / sum(exp(beta_k)) for all k**
+$$P_i = \frac{e^{\beta_i}}{\sum_{k=1}^{K} e^{\beta_k}}$$
 
-These probabilities sum to 1 across all items. A normalized best-worst score is also computed:
+where $K$ is the total number of items. These probabilities sum to 1 across all items. A normalized best-worst score is also computed:
 
-**NBW_i = (B_i - W_i) / N_i**
+$$\text{NBW}_i = \frac{B_i - W_i}{N_i}$$
 
-where *N_i* is the total number of times item *i* was shown.
+where $N_i$ is the total number of times item $i$ was shown.
 
 ```r
 agg <- md_aggregate(
