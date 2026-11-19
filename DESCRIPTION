@@ -22,7 +22,7 @@ Imports:
     stats,
     utils
 Depends:
-    R (>= 4.0)
+    R (>= 4.1)
 LazyData: true
 Suggests:
     knitr,
