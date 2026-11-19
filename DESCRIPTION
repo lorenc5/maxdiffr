@@ -17,13 +17,13 @@ Imports:
     tidyr,
     ggplot2,
     rlang,
-    ibd,
     stats,
     utils
 Depends:
     R (>= 4.1)
 LazyData: true
 Suggests:
+    ibd,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

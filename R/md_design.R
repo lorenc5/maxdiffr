@@ -18,21 +18,28 @@
 #'   `Item1` through `Item{items_per_block}`, and optionally label columns.
 #'
 #' @examples
-#' # Generate a small design: 6 items, 6 blocks, 3 per block, 2 versions
-#' des <- md_make_design(
-#'   n_items = 6, n_blocks = 6, items_per_block = 3,
-#'   n_respondents = 100, n_versions = 2,
-#'   seeds = c(111, 222),
-#'   item_labels = paste("MSG", LETTERS[1:6])
-#' )
-#' head(des)
-#' table(des$version)
+#' if (requireNamespace("ibd", quietly = TRUE)) {
+#'   # Generate a small design: 6 items, 6 blocks, 3 per block, 2 versions
+#'   des <- md_make_design(
+#'     n_items = 6, n_blocks = 6, items_per_block = 3,
+#'     n_respondents = 100, n_versions = 2,
+#'     seeds = c(111, 222),
+#'     item_labels = paste("MSG", LETTERS[1:6])
+#'   )
+#'   head(des)
+#'   table(des$version)
+#' }
 #'
 #' @export
-#' @importFrom ibd ibd
 md_make_design <- function(n_items = 12, n_blocks = 12, items_per_block = 4,
                            n_respondents = 1000, n_versions = 4,
                            seeds = NULL, item_labels = NULL) {
+  if (!requireNamespace("ibd", quietly = TRUE)) {
+    stop("Package 'ibd' is required for md_make_design(). ",
+      "Install it with: install.packages('ibd')",
+      call. = FALSE
+    )
+  }
   if (is.null(seeds)) {
     seeds <- 12345 + seq_len(n_versions)
   }

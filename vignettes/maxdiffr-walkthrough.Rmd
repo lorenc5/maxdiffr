@@ -58,7 +58,7 @@ If you need to create a new design from scratch, use `md_make_design()`. This wr
 `ibd::ibd()` to produce a balanced incomplete block design with per-version
 randomization.
 
-```{r design}
+```{r design, eval = requireNamespace("ibd", quietly = TRUE)}
 # We already have md_design, but here's how you'd generate one:
 new_des <- md_make_design(
   n_items = 8, n_blocks = 8, items_per_block = 4,

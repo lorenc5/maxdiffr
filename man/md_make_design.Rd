@@ -41,14 +41,16 @@ Produces one design per version with per-version randomization of item order
 within blocks.
 }
 \examples{
-# Generate a small design: 6 items, 6 blocks, 3 per block, 2 versions
-des <- md_make_design(
-  n_items = 6, n_blocks = 6, items_per_block = 3,
-  n_respondents = 100, n_versions = 2,
-  seeds = c(111, 222),
-  item_labels = paste("MSG", LETTERS[1:6])
-)
-head(des)
-table(des$version)
+if (requireNamespace("ibd", quietly = TRUE)) {
+  # Generate a small design: 6 items, 6 blocks, 3 per block, 2 versions
+  des <- md_make_design(
+    n_items = 6, n_blocks = 6, items_per_block = 3,
+    n_respondents = 100, n_versions = 2,
+    seeds = c(111, 222),
+    item_labels = paste("MSG", LETTERS[1:6])
+  )
+  head(des)
+  table(des$version)
+}
 
 }
