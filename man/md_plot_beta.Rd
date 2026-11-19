@@ -23,13 +23,16 @@ data(md_design)
 data(md_items)
 
 prep <- md_prep(md_survey, md_design,
-                id_col = "id", version_col = "version",
-                best_prefix = "QMAXDIFF_", best_suffix = "b",
-                worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-                n_blocks = 8, n_items = 8, items_per_block = 4,
-                item_labels = md_items$item_label)
-agg <- md_aggregate(prep$long, id_col = "pid",
-                    item_col = "message", response_col = "y")
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label
+)
+agg <- md_aggregate(prep$long,
+  id_col = "pid",
+  item_col = "message", response_col = "y"
+)
 md_plot_beta(agg, title = "Example Beta Plot")
 
 }

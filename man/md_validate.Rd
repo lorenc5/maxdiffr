@@ -64,10 +64,11 @@ in the shown item set, and values are within the expected range.
 data(md_survey)
 data(md_design)
 val <- md_validate(md_survey, md_design,
-                   id_col = "id", version_col = "version",
-                   best_prefix = "QMAXDIFF_", best_suffix = "b",
-                   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-                   n_blocks = 8, n_items = 8, items_per_block = 4)
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4
+)
 val$valid
 
 }

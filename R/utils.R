@@ -21,9 +21,13 @@ utils::globalVariables(c(
 #' @keywords internal
 .weighted_pct <- function(k, weight) {
   wt <- questionr::wtd.table(k, weights = weight)
-  if (length(wt) == 0) return(0)
+  if (length(wt) == 0) {
+    return(0)
+  }
   total <- sum(wt)
-  if (total == 0) return(0)
+  if (total == 0) {
+    return(0)
+  }
   # Return proportion for the "1" category
   if ("1" %in% names(wt)) {
     return(as.numeric(wt[["1"]]) / total)

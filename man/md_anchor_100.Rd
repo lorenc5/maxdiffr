@@ -30,15 +30,18 @@ data(md_items)
 
 # Anchored prep + aggregate + 100-point scale
 prep_anc <- md_prep(md_survey, md_design,
-                    id_col = "id", version_col = "version",
-                    best_prefix = "QMAXDIFF_", best_suffix = "b",
-                    worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-                    n_blocks = 8, n_items = 8, items_per_block = 4,
-                    item_labels = md_items$item_label,
-                    anchor_prefix = "QMAXDIFF_",
-                    anchor_suffix = "_anchor")
-agg_anc <- md_aggregate(prep_anc$long, id_col = "pid",
-                        item_col = "message", response_col = "y")
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_",
+  anchor_suffix = "_anchor"
+)
+agg_anc <- md_aggregate(prep_anc$long,
+  id_col = "pid",
+  item_col = "message", response_col = "y"
+)
 a100 <- md_anchor_100(agg_anc)
 a100 |> dplyr::select(message, thresh100, cut)
 

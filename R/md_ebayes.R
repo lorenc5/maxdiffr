@@ -29,20 +29,25 @@
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
 #'
 #' # Long format
-#' eb <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
-#'                 item_col = "message", response_col = "y")
+#' eb <- md_ebayes(prep$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y"
+#' )
 #' head(eb)
 #'
 #' # Wide format
-#' eb_wide <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
-#'                      item_col = "message", response_col = "y", wide = TRUE)
+#' eb_wide <- md_ebayes(prep$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y", wide = TRUE
+#' )
 #' head(eb_wide)
 #'
 #' @export
@@ -55,7 +60,6 @@ md_ebayes <- function(long_df,
                       item_col = "message", response_col = "y",
                       E = 0.01, alpha = 0.1, wide = FALSE,
                       weight_df = NULL, skip_checks = FALSE) {
-
   if (!is.null(weight_df)) {
     # Weighted path
     colnames(weight_df) <- c(id_col, "WEIGHT")
@@ -66,10 +70,12 @@ md_ebayes <- function(long_df,
       sg <- split_group[[nm]]
       wt <- questionr::wtd.table(x = sg[[response_col]], weights = sg$WEIGHT)
       worst_count <- if ("-1" %in% names(wt)) wt[["-1"]] else 0
-      none_count  <- if ("0"  %in% names(wt)) wt[["0"]]  else 0
-      best_count  <- if ("1"  %in% names(wt)) wt[["1"]]  else 0
-      data.frame(item = nm, worsts = worst_count, none = none_count,
-                 bests = best_count)
+      none_count <- if ("0" %in% names(wt)) wt[["0"]] else 0
+      best_count <- if ("1" %in% names(wt)) wt[["1"]] else 0
+      data.frame(
+        item = nm, worsts = worst_count, none = none_count,
+        bests = best_count
+      )
     }))
     names(agg_dat_w)[names(agg_dat_w) == "item"] <- item_col
     agg_dat_w$all <- agg_dat_w$worsts + agg_dat_w$none + agg_dat_w$bests
@@ -82,17 +88,17 @@ md_ebayes <- function(long_df,
     ind_dat <- data_w |>
       dplyr::group_by(.data[[id_col]], .data[[item_col]]) |>
       dplyr::summarise(
-        bests  = sum(.data[[response_col]] == 1),
+        bests = sum(.data[[response_col]] == 1),
         worsts = sum(.data[[response_col]] == -1),
-        all    = dplyr::n(),
+        all = dplyr::n(),
         WEIGHT = .data[["WEIGHT"]][1],
         .groups = "drop"
       )
 
     # Weight the counts
-    ind_dat$bests  <- ind_dat$bests  * ind_dat$WEIGHT
+    ind_dat$bests <- ind_dat$bests * ind_dat$WEIGHT
     ind_dat$worsts <- ind_dat$worsts * ind_dat$WEIGHT
-    ind_dat$all    <- ind_dat$all    * ind_dat$WEIGHT
+    ind_dat$all <- ind_dat$all * ind_dat$WEIGHT
 
     ind_dat$p_ij <- (ind_dat$all - ind_dat$worsts + ind_dat$bests) /
       (2 * ind_dat$all)
@@ -107,16 +113,15 @@ md_ebayes <- function(long_df,
       ((alpha / (1 + alpha)) * out$p_j)
     out$b_ebayes <- log(out$p_ij / (1 - out$p_ij))
     out <- dplyr::select(out, dplyr::all_of(c(id_col, item_col, "b_ebayes")))
-
   } else {
     # Unweighted path
     # Aggregate p_j
     agg_dat <- long_df |>
       dplyr::group_by(.data[[item_col]]) |>
       dplyr::summarise(
-        bests  = sum(.data[[response_col]] == 1),
+        bests = sum(.data[[response_col]] == 1),
         worsts = sum(.data[[response_col]] == -1),
-        all    = dplyr::n(),
+        all = dplyr::n(),
         .groups = "drop"
       ) |>
       dplyr::mutate(p_j = (all - worsts + bests) / (2 * all)) |>
@@ -126,9 +131,9 @@ md_ebayes <- function(long_df,
     ind_dat <- long_df |>
       dplyr::group_by(.data[[id_col]], .data[[item_col]]) |>
       dplyr::summarise(
-        bests  = sum(.data[[response_col]] == 1),
+        bests = sum(.data[[response_col]] == 1),
         worsts = sum(.data[[response_col]] == -1),
-        all    = dplyr::n(),
+        all = dplyr::n(),
         .groups = "drop"
       ) |>
       dplyr::mutate(

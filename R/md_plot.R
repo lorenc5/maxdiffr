@@ -13,20 +13,22 @@
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
-#' agg <- md_aggregate(prep$long, id_col = "pid",
-#'                     item_col = "message", response_col = "y")
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
+#' agg <- md_aggregate(prep$long,
+#'   id_col = "pid",
+#'   item_col = "message", response_col = "y"
+#' )
 #' md_plot_beta(agg, title = "Example Beta Plot")
 #'
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point geom_errorbar coord_flip labs
 #'   theme_minimal ggtitle theme element_text
 md_plot_beta <- function(agg_df, title = "MaxDiff Beta Estimates") {
-
   # Sort by beta
   agg_df <- dplyr::arrange(agg_df, .data[["b"]])
   agg_df$message <- factor(agg_df$message, levels = agg_df$message)
@@ -63,15 +65,18 @@ md_plot_beta <- function(agg_df, title = "MaxDiff Beta Estimates") {
 #' data(md_items)
 #'
 #' prep_anc <- md_prep(md_survey, md_design,
-#'                     id_col = "id", version_col = "version",
-#'                     best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                     worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                     n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                     item_labels = md_items$item_label,
-#'                     anchor_prefix = "QMAXDIFF_",
-#'                     anchor_suffix = "_anchor")
-#' agg_anc <- md_aggregate(prep_anc$long, id_col = "pid",
-#'                         item_col = "message", response_col = "y")
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label,
+#'   anchor_prefix = "QMAXDIFF_",
+#'   anchor_suffix = "_anchor"
+#' )
+#' agg_anc <- md_aggregate(prep_anc$long,
+#'   id_col = "pid",
+#'   item_col = "message", response_col = "y"
+#' )
 #' a100 <- md_anchor_100(agg_anc)
 #' md_plot_anchor(a100, sample_label = "Simulated Data")
 #'
@@ -79,7 +84,6 @@ md_plot_beta <- function(agg_df, title = "MaxDiff Beta Estimates") {
 md_plot_anchor <- function(anchor_df, title = NULL,
                            anchor_label = "ANCHOR",
                            sample_label = "Full Sample") {
-
   if (is.null(title)) {
     title <- paste0("Anchored MaxDiff Score (", sample_label, ")")
   }
@@ -139,13 +143,16 @@ md_plot_anchor <- function(anchor_df, title = NULL,
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
-#' eb_wide <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
-#'                      item_col = "message", response_col = "y", wide = TRUE)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
+#' eb_wide <- md_ebayes(prep$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y", wide = TRUE
+#' )
 #' turf <- md_turf_matrix(eb_wide, id_col = "pid")
 #' md_plot_turf(turf, id_col = "pid", title = "Example TURF Plot")
 #'
@@ -154,7 +161,6 @@ md_plot_turf <- function(turf_df,
                          id_col = "pid", weight_col = NULL,
                          item_cols = NULL,
                          title = "TURF Cumulative Reach") {
-
   if (is.null(item_cols)) {
     item_cols <- grep("_turf$", names(turf_df), value = TRUE)
   }

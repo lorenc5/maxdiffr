@@ -29,10 +29,11 @@
 #' data(md_survey)
 #' data(md_design)
 #' val <- md_validate(md_survey, md_design,
-#'                    id_col = "id", version_col = "version",
-#'                    best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                    worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                    n_blocks = 8, n_items = 8, items_per_block = 4)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4
+#' )
 #' val$valid
 #'
 #' @export
@@ -42,7 +43,6 @@ md_validate <- function(survey_df, design_df,
                         worst_prefix = "QMAXDIFF_", worst_suffix = "w",
                         n_blocks = 12, n_items = 12, items_per_block = 4,
                         drop_invalid = FALSE, verbose = TRUE) {
-
   issue_list <- list()
   item_cols <- paste0("Item", seq_len(items_per_block))
 
@@ -59,7 +59,7 @@ md_validate <- function(survey_df, design_df,
       worst_col_name <- paste0(worst_prefix, j, worst_suffix)
 
       if (!(best_col_name %in% names(survey_df)) ||
-          !(worst_col_name %in% names(survey_df))) {
+        !(worst_col_name %in% names(survey_df))) {
         issue_list <- c(issue_list, list(data.frame(
           id = as.character(rid), block = j, issue = "missing column"
         )))
@@ -79,7 +79,7 @@ md_validate <- function(survey_df, design_df,
 
       # Check range
       if (best_val < 1 || best_val > n_items ||
-          worst_val < 1 || worst_val > n_items) {
+        worst_val < 1 || worst_val > n_items) {
         issue_list <- c(issue_list, list(data.frame(
           id = as.character(rid), block = j,
           issue = paste0("out of range: best=", best_val, " worst=", worst_val)
@@ -110,16 +110,20 @@ md_validate <- function(survey_df, design_df,
       if (!(best_val %in% shown_items)) {
         issue_list <- c(issue_list, list(data.frame(
           id = as.character(rid), block = j,
-          issue = paste0("best=", best_val, " not in shown items: ",
-                         paste(shown_items, collapse = ","))
+          issue = paste0(
+            "best=", best_val, " not in shown items: ",
+            paste(shown_items, collapse = ",")
+          )
         )))
       }
 
       if (!(worst_val %in% shown_items)) {
         issue_list <- c(issue_list, list(data.frame(
           id = as.character(rid), block = j,
-          issue = paste0("worst=", worst_val, " not in shown items: ",
-                         paste(shown_items, collapse = ","))
+          issue = paste0(
+            "worst=", worst_val, " not in shown items: ",
+            paste(shown_items, collapse = ",")
+          )
         )))
       }
     }

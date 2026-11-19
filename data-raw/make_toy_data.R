@@ -97,11 +97,11 @@ for (resp in 1:n_respondents) {
     anchor_noise <- rnorm(1, 0, 0.2)
     combined <- mean_score + anchor_noise
     if (combined > 0.22) {
-      anchor_resp <- 1  # ALL important
+      anchor_resp <- 1 # ALL important
     } else if (combined < -0.05) {
-      anchor_resp <- 3  # NONE important
+      anchor_resp <- 3 # NONE important
     } else {
-      anchor_resp <- 2  # SOME
+      anchor_resp <- 2 # SOME
     }
     row[[paste0("QMAXDIFF_", j, "_anchor")]] <- anchor_resp
   }

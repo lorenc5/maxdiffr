@@ -38,23 +38,25 @@
 #'
 #' # Standard (non-anchored) prep
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
 #' head(prep$long)
 #'
 #' # Anchored prep
 #' prep_anc <- md_prep(md_survey, md_design,
-#'                     id_col = "id", version_col = "version",
-#'                     best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                     worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                     n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                     item_labels = md_items$item_label,
-#'                     anchor_prefix = "QMAXDIFF_",
-#'                     anchor_suffix = "_anchor")
-#' table(prep_anc$long$message)  # includes ANCHOR
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label,
+#'   anchor_prefix = "QMAXDIFF_",
+#'   anchor_suffix = "_anchor"
+#' )
+#' table(prep_anc$long$message) # includes ANCHOR
 #'
 #' @export
 #' @importFrom tidyr pivot_longer pivot_wider separate
@@ -67,7 +69,6 @@ md_prep <- function(survey_df, design_df,
                     item_labels = NULL,
                     anchor_prefix = NULL, anchor_suffix = "_anchor",
                     weight_col = NULL) {
-
   if (is.null(item_labels)) {
     item_labels <- paste0("Item_", seq_len(n_items))
   }
@@ -92,7 +93,6 @@ md_prep <- function(survey_df, design_df,
   bw_hold <- list()
 
   for (j in seq_len(n_blocks)) {
-
     # Create blank matrix: n respondents x n_cols (items + maybe anchor)
     bw_dat <- data.frame(matrix(NA, nrow = n_resp, ncol = n_cols))
 
@@ -237,10 +237,10 @@ md_prep <- function(survey_df, design_df,
   long_df <- dplyr::mutate(
     long_df,
     y = dplyr::case_when(
-      y == 1  ~ 1,
+      y == 1 ~ 1,
       y == -1 ~ -1,
-      y == 0  ~ 0,
-      TRUE    ~ NA_real_
+      y == 0 ~ 0,
+      TRUE ~ NA_real_
     )
   )
 

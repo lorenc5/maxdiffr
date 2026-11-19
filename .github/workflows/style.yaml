@@ -18,16 +18,17 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install styler
-        run: install.packages("styler")
-        shell: Rscript {0}
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::styler
+          needs: styler
 
       - name: Check style
         run: |
           out <- styler::style_pkg(dry = "on")
-          if (nrow(out[out$changed, ]) > 0) {
+          if (any(out$changed, na.rm = TRUE)) {
             cat("Files with style issues:\n")
-            print(out[out$changed, ])
+            print(out[out$changed %in% TRUE, ])
             stop("Style issues found. Run styler::style_pkg() locally.")
           }
         shell: Rscript {0}

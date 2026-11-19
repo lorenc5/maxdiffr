@@ -27,7 +27,6 @@
 #' @export
 ae_mnl <- function(agg_df, all_col = "all", best_col = "bests",
                    worst_col = "worsts", ci_level = 0.95) {
-
   best_count <- agg_df[[best_col]]
   worst_count <- agg_df[[worst_col]]
 

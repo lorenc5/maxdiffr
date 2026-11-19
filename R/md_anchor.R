@@ -19,21 +19,23 @@
 #'
 #' # Anchored prep + aggregate + 100-point scale
 #' prep_anc <- md_prep(md_survey, md_design,
-#'                     id_col = "id", version_col = "version",
-#'                     best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                     worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                     n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                     item_labels = md_items$item_label,
-#'                     anchor_prefix = "QMAXDIFF_",
-#'                     anchor_suffix = "_anchor")
-#' agg_anc <- md_aggregate(prep_anc$long, id_col = "pid",
-#'                         item_col = "message", response_col = "y")
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label,
+#'   anchor_prefix = "QMAXDIFF_",
+#'   anchor_suffix = "_anchor"
+#' )
+#' agg_anc <- md_aggregate(prep_anc$long,
+#'   id_col = "pid",
+#'   item_col = "message", response_col = "y"
+#' )
 #' a100 <- md_anchor_100(agg_anc)
 #' a100 |> dplyr::select(message, thresh100, cut)
 #'
 #' @export
 md_anchor_100 <- function(agg_df, anchor_label = "ANCHOR", round_dec = 0) {
-
   c100 <- agg_df$choice_p * 100
   anchor_value <- c100[agg_df$message == anchor_label]
 
@@ -45,9 +47,9 @@ md_anchor_100 <- function(agg_df, anchor_label = "ANCHOR", round_dec = 0) {
   agg_df$thresh100 <- round(c100_t + 100, round_dec)
 
   agg_df$cut <- dplyr::case_when(
-    agg_df$thresh100 < 100  ~ 1L,
+    agg_df$thresh100 < 100 ~ 1L,
     agg_df$thresh100 == 100 ~ 2L,
-    agg_df$thresh100 > 100  ~ 3L
+    agg_df$thresh100 > 100 ~ 3L
   )
 
   agg_df
@@ -78,16 +80,19 @@ md_anchor_100 <- function(agg_df, anchor_label = "ANCHOR", round_dec = 0) {
 #'
 #' # Anchored prep + individual ebayes + individual anchor 100
 #' prep_anc <- md_prep(md_survey, md_design,
-#'                     id_col = "id", version_col = "version",
-#'                     best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                     worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                     n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                     item_labels = md_items$item_label,
-#'                     anchor_prefix = "QMAXDIFF_",
-#'                     anchor_suffix = "_anchor")
-#' eb_anc <- md_ebayes(prep_anc$long, id_col = "pid", block_col = "block",
-#'                     item_col = "message", response_col = "y",
-#'                     skip_checks = TRUE)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label,
+#'   anchor_prefix = "QMAXDIFF_",
+#'   anchor_suffix = "_anchor"
+#' )
+#' eb_anc <- md_ebayes(prep_anc$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y",
+#'   skip_checks = TRUE
+#' )
 #' ind_a100 <- md_ind_anchor_100(eb_anc, id_col = "pid", item_col = "message")
 #' head(ind_a100)
 #'
@@ -96,7 +101,6 @@ md_ind_anchor_100 <- function(ebayes_df,
                               id_col = "pid", item_col = "message",
                               score_col = "b_ebayes",
                               anchor_label = "ANCHOR", round_dec = 0) {
-
   e_res_split <- split(ebayes_df, ebayes_df[[id_col]])
 
   out_list <- lapply(e_res_split, function(x) {

@@ -43,16 +43,19 @@ data(md_items)
 
 # Anchored prep + individual ebayes + individual anchor 100
 prep_anc <- md_prep(md_survey, md_design,
-                    id_col = "id", version_col = "version",
-                    best_prefix = "QMAXDIFF_", best_suffix = "b",
-                    worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-                    n_blocks = 8, n_items = 8, items_per_block = 4,
-                    item_labels = md_items$item_label,
-                    anchor_prefix = "QMAXDIFF_",
-                    anchor_suffix = "_anchor")
-eb_anc <- md_ebayes(prep_anc$long, id_col = "pid", block_col = "block",
-                    item_col = "message", response_col = "y",
-                    skip_checks = TRUE)
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_",
+  anchor_suffix = "_anchor"
+)
+eb_anc <- md_ebayes(prep_anc$long,
+  id_col = "pid", block_col = "block",
+  item_col = "message", response_col = "y",
+  skip_checks = TRUE
+)
 ind_a100 <- md_ind_anchor_100(eb_anc, id_col = "pid", item_col = "message")
 head(ind_a100)
 

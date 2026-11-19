@@ -19,13 +19,16 @@
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
-#' eb_wide <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
-#'                      item_col = "message", response_col = "y", wide = TRUE)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
+#' eb_wide <- md_ebayes(prep$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y", wide = TRUE
+#' )
 #' turf <- md_turf_matrix(eb_wide, id_col = "pid")
 #' head(turf)
 #'
@@ -33,7 +36,6 @@
 md_turf_matrix <- function(ebayes_wide,
                            id_col = "pid", weight_col = NULL,
                            item_cols = NULL) {
-
   exclude <- c(id_col, weight_col)
   if (is.null(item_cols)) {
     item_cols <- setdiff(names(ebayes_wide), exclude)
@@ -83,13 +85,16 @@ md_turf_matrix <- function(ebayes_wide,
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
-#' eb_wide <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
-#'                      item_col = "message", response_col = "y", wide = TRUE)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
+#' eb_wide <- md_ebayes(prep$long,
+#'   id_col = "pid", block_col = "block",
+#'   item_col = "message", response_col = "y", wide = TRUE
+#' )
 #' turf <- md_turf_matrix(eb_wide, id_col = "pid")
 #'
 #' # Single items
@@ -102,7 +107,6 @@ md_turf_matrix <- function(ebayes_wide,
 md_portfolio <- function(turf_df, combo = 1,
                          id_col = "pid", weight_col = NULL,
                          item_cols = NULL, top_n = 10) {
-
   if (is.null(item_cols)) {
     item_cols <- grep("_turf$", names(turf_df), value = TRUE)
   }
@@ -122,8 +126,8 @@ md_portfolio <- function(turf_df, combo = 1,
   if (combo == 1) {
     out <- data.frame(
       `Reach (%)` = round(reach * 100, 2),
-      `Freq.`     = freq,
-      Portfolio    = names(reach),
+      `Freq.` = freq,
+      Portfolio = names(reach),
       check.names = FALSE
     )
   } else {
@@ -139,11 +143,11 @@ md_portfolio <- function(turf_df, combo = 1,
         total_reach <- sum(reached) / nrow(turf_only)
       }
       total_freq <- sum(reached)
-      portfolio  <- paste(items, collapse = " + ")
+      portfolio <- paste(items, collapse = " + ")
       data.frame(
         `Reach (%)` = round(total_reach * 100, 2),
-        `Freq.`     = total_freq,
-        Portfolio    = portfolio,
+        `Freq.` = total_freq,
+        Portfolio = portfolio,
         check.names = FALSE
       )
     })

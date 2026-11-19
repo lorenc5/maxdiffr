@@ -21,14 +21,17 @@
 #' data(md_items)
 #'
 #' prep <- md_prep(md_survey, md_design,
-#'                 id_col = "id", version_col = "version",
-#'                 best_prefix = "QMAXDIFF_", best_suffix = "b",
-#'                 worst_prefix = "QMAXDIFF_", worst_suffix = "w",
-#'                 n_blocks = 8, n_items = 8, items_per_block = 4,
-#'                 item_labels = md_items$item_label)
+#'   id_col = "id", version_col = "version",
+#'   best_prefix = "QMAXDIFF_", best_suffix = "b",
+#'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+#'   n_blocks = 8, n_items = 8, items_per_block = 4,
+#'   item_labels = md_items$item_label
+#' )
 #'
-#' agg <- md_aggregate(prep$long, id_col = "pid", item_col = "message",
-#'                     response_col = "y")
+#' agg <- md_aggregate(prep$long,
+#'   id_col = "pid", item_col = "message",
+#'   response_col = "y"
+#' )
 #' agg
 #'
 #' @export
@@ -38,14 +41,13 @@ md_aggregate <- function(long_df,
                          id_col = "pid", item_col = "message",
                          response_col = "y",
                          weight_df = NULL, ci_level = 0.95) {
-
   if (is.null(weight_df)) {
     # Unweighted
     bw_dat_a <- long_df |>
       dplyr::group_by(.data[[item_col]]) |>
       dplyr::summarise(
-        all    = dplyr::n(),
-        bests  = sum(.data[[response_col]] == 1),
+        all = dplyr::n(),
+        bests = sum(.data[[response_col]] == 1),
         worsts = sum(.data[[response_col]] == -1),
         .groups = "drop"
       )
@@ -59,8 +61,8 @@ md_aggregate <- function(long_df,
       sg <- split_group[[nm]]
       wt <- questionr::wtd.table(x = sg[[response_col]], weights = sg$WEIGHT)
       worst_count <- if ("-1" %in% names(wt)) wt[["-1"]] else 0
-      none_count  <- if ("0"  %in% names(wt)) wt[["0"]]  else 0
-      best_count  <- if ("1"  %in% names(wt)) wt[["1"]]  else 0
+      none_count <- if ("0" %in% names(wt)) wt[["0"]] else 0
+      best_count <- if ("1" %in% names(wt)) wt[["1"]] else 0
       data.frame(
         message = nm,
         all     = round(worst_count + none_count + best_count, 0),

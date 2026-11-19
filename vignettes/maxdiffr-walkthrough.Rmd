@@ -35,9 +35,9 @@ The pipeline has six stages:
 library(maxdiffr)
 library(ggplot2)
 
-data(md_survey)   # 150 simulated respondents
-data(md_design)   # IBD design: 8 items, 8 blocks, 4 items/block, 2 versions
-data(md_items)    # Item labels
+data(md_survey) # 150 simulated respondents
+data(md_design) # IBD design: 8 items, 8 blocks, 4 items/block, 2 versions
+data(md_items) # Item labels
 ```
 
 The simulated survey has `r nrow(md_survey)` respondents across
@@ -47,7 +47,9 @@ best and worst on each screen. An anchor question follows each screen.
 
 ```{r peek}
 md_items
-md_survey |> dplyr::select(1:6) |> head()
+md_survey |>
+  dplyr::select(1:6) |>
+  head()
 ```
 
 ## Step 1: Design Generation
@@ -197,7 +199,9 @@ eb_wide <- md_ebayes(
   item_col = "message", response_col = "y",
   wide = TRUE
 )
-eb_wide |> dplyr::select(1:5) |> head()
+eb_wide |>
+  dplyr::select(1:5) |>
+  head()
 ```
 
 The `alpha` parameter controls shrinkage strength. Higher alpha pulls individual
@@ -241,7 +245,8 @@ agg_anc <- md_aggregate(
 )
 
 a100 <- md_anchor_100(agg_anc, anchor_label = "ANCHOR")
-a100 |> dplyr::arrange(dplyr::desc(thresh100)) |>
+a100 |>
+  dplyr::arrange(dplyr::desc(thresh100)) |>
   dplyr::select(message, thresh100, cut)
 ```
 
@@ -259,11 +264,13 @@ eb_anc <- md_ebayes(
   prep_anc$long,
   id_col = "pid", block_col = "block",
   item_col = "message", response_col = "y",
-  skip_checks = TRUE  # required for anchored data
+  skip_checks = TRUE # required for anchored data
 )
 
 ind_a100 <- md_ind_anchor_100(eb_anc, id_col = "pid", item_col = "message")
-ind_a100 |> dplyr::select(1:5) |> head()
+ind_a100 |>
+  dplyr::select(1:5) |>
+  head()
 ```
 
 ## Step 6: TURF Analysis
@@ -306,9 +313,12 @@ dem_prep <- md_prep(
   item_labels = md_items$item_label
 )
 
-dem_agg <- md_aggregate(dem_prep$long, id_col = "pid",
-                        item_col = "message", response_col = "y")
-dem_agg |> dplyr::arrange(dplyr::desc(b)) |>
+dem_agg <- md_aggregate(dem_prep$long,
+  id_col = "pid",
+  item_col = "message", response_col = "y"
+)
+dem_agg |>
+  dplyr::arrange(dplyr::desc(b)) |>
   dplyr::select(message, b, choice_p)
 ```
 
