@@ -1,4 +1,3 @@
-#' @importFrom questionr wtd.table
 #' @importFrom stats setNames qnorm
 #' @importFrom rlang sym .data !!
 #' @importFrom dplyr .data desc
@@ -13,26 +12,29 @@ utils::globalVariables(c(
 #' Weighted percent for a binary (0/1) column
 #'
 #' Returns the proportion of 1s, handling edge cases where all values are 0 or 1.
-#' Uses [questionr::wtd.table()] to compute weighted frequencies, then normalizes.
 #'
 #' @param k Numeric vector of 0s and 1s.
 #' @param weight Numeric weight vector.
 #' @return Scalar proportion of 1s (weighted).
 #' @keywords internal
 .weighted_pct <- function(k, weight) {
-  wt <- questionr::wtd.table(k, weights = weight)
-  if (length(wt) == 0) {
-    return(0)
-  }
-  total <- sum(wt)
+  total <- sum(weight)
   if (total == 0) {
     return(0)
   }
-  # Return proportion for the "1" category
-  if ("1" %in% names(wt)) {
-    return(as.numeric(wt[["1"]]) / total)
-  }
-  0
+  sum(weight[k == 1]) / total
+}
+
+#' Weighted frequency table
+#'
+#' Replacement for `questionr::wtd.table()` that sums weights by factor level.
+#'
+#' @param x Factor or character vector.
+#' @param weights Numeric weight vector, same length as `x`.
+#' @return Named numeric vector of weighted counts.
+#' @keywords internal
+.wtd_table <- function(x, weights) {
+  tapply(weights, x, sum)
 }
 
 #' Softmax transform

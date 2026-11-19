@@ -18,7 +18,6 @@ Imports:
     ggplot2,
     rlang,
     ibd,
-    questionr,
     stats,
     utils
 Depends:

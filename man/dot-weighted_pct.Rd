@@ -16,6 +16,5 @@ Scalar proportion of 1s (weighted).
 }
 \description{
 Returns the proportion of 1s, handling edge cases where all values are 0 or 1.
-Uses \code{\link[questionr:wtd.table]{questionr::wtd.table()}} to compute weighted frequencies, then normalizes.
 }
 \keyword{internal}

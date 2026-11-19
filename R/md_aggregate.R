@@ -36,7 +36,6 @@
 #'
 #' @export
 #' @importFrom dplyr group_by summarise n arrange bind_rows left_join
-#' @importFrom questionr wtd.table
 md_aggregate <- function(long_df,
                          id_col = "pid", item_col = "message",
                          response_col = "y",
@@ -59,7 +58,7 @@ md_aggregate <- function(long_df,
 
     bw_dat_a <- dplyr::bind_rows(lapply(names(split_group), function(nm) {
       sg <- split_group[[nm]]
-      wt <- questionr::wtd.table(x = sg[[response_col]], weights = sg$WEIGHT)
+      wt <- .wtd_table(x = sg[[response_col]], weights = sg$WEIGHT)
       worst_count <- if ("-1" %in% names(wt)) wt[["-1"]] else 0
       none_count <- if ("0" %in% names(wt)) wt[["0"]] else 0
       best_count <- if ("1" %in% names(wt)) wt[["1"]] else 0
