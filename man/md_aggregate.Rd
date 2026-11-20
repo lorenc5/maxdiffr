@@ -9,7 +9,7 @@ md_aggregate(
   id_col = "pid",
   item_col = "message",
   response_col = "y",
-  weight_df = NULL,
+  weight_col = NULL,
   ci_level = 0.95
 )
 }
@@ -23,8 +23,9 @@ for respondent ID, item label, and response (1/0/-1).}
 
 \item{response_col}{Character name of response column (default "y").}
 
-\item{weight_df}{Optional data frame with two columns: ID and weight.
-Column names must match \code{id_col} and "WEIGHT". If NULL, unweighted.}
+\item{weight_col}{Character name of a weight column in \code{long_df}, or NULL
+for unweighted analysis (default NULL). The column should contain numeric
+survey weights (e.g., raked/post-stratification weights).}
 
 \item{ci_level}{Confidence level for AE-MNL intervals (default 0.95).}
 }
@@ -46,13 +47,22 @@ prep <- md_prep(md_survey, md_design,
   best_prefix = "QMAXDIFF_", best_suffix = "b",
   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
   n_blocks = 8, n_items = 8, items_per_block = 4,
-  item_labels = md_items$item_label
+  item_labels = md_items$item_label,
+  weight_col = "weight"
 )
 
+# Unweighted
 agg <- md_aggregate(prep$long,
   id_col = "pid", item_col = "message",
   response_col = "y"
 )
 agg
+
+# Weighted
+agg_w <- md_aggregate(prep$long,
+  id_col = "pid", item_col = "message",
+  response_col = "y", weight_col = "weight"
+)
+agg_w
 
 }

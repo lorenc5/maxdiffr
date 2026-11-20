@@ -8,8 +8,9 @@
 #' @param id_col Character name of respondent ID column (default "pid").
 #' @param item_col Character name of item/message column (default "message").
 #' @param response_col Character name of response column (default "y").
-#' @param weight_df Optional data frame with two columns: ID and weight.
-#'   Column names must match `id_col` and "WEIGHT". If NULL, unweighted.
+#' @param weight_col Character name of a weight column in `long_df`, or NULL
+#'   for unweighted analysis (default NULL). The column should contain numeric
+#'   survey weights (e.g., raked/post-stratification weights).
 #' @param ci_level Confidence level for AE-MNL intervals (default 0.95).
 #'
 #' @return Data frame with one row per item, columns: `message`, `all`, `bests`,
@@ -25,22 +26,31 @@
 #'   best_prefix = "QMAXDIFF_", best_suffix = "b",
 #'   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
 #'   n_blocks = 8, n_items = 8, items_per_block = 4,
-#'   item_labels = md_items$item_label
+#'   item_labels = md_items$item_label,
+#'   weight_col = "weight"
 #' )
 #'
+#' # Unweighted
 #' agg <- md_aggregate(prep$long,
 #'   id_col = "pid", item_col = "message",
 #'   response_col = "y"
 #' )
 #' agg
 #'
+#' # Weighted
+#' agg_w <- md_aggregate(prep$long,
+#'   id_col = "pid", item_col = "message",
+#'   response_col = "y", weight_col = "weight"
+#' )
+#' agg_w
+#'
 #' @export
 #' @importFrom dplyr group_by summarise n arrange bind_rows left_join
 md_aggregate <- function(long_df,
                          id_col = "pid", item_col = "message",
                          response_col = "y",
-                         weight_df = NULL, ci_level = 0.95) {
-  if (is.null(weight_df)) {
+                         weight_col = NULL, ci_level = 0.95) {
+  if (is.null(weight_col) || !(weight_col %in% names(long_df))) {
     # Unweighted
     bw_dat_a <- long_df |>
       dplyr::group_by(.data[[item_col]]) |>
@@ -52,13 +62,11 @@ md_aggregate <- function(long_df,
       )
   } else {
     # Weighted
-    colnames(weight_df) <- c(id_col, "WEIGHT")
-    merged <- dplyr::left_join(long_df, weight_df, by = id_col)
-    split_group <- split(merged, merged[[item_col]])
+    split_group <- split(long_df, long_df[[item_col]])
 
     bw_dat_a <- dplyr::bind_rows(lapply(names(split_group), function(nm) {
       sg <- split_group[[nm]]
-      wt <- .wtd_table(x = sg[[response_col]], weights = sg$WEIGHT)
+      wt <- .wtd_table(x = sg[[response_col]], weights = sg[[weight_col]])
       worst_count <- if ("-1" %in% names(wt)) wt[["-1"]] else 0
       none_count <- if ("0" %in% names(wt)) wt[["0"]] else 0
       best_count <- if ("1" %in% names(wt)) wt[["1"]] else 0

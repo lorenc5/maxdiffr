@@ -13,7 +13,7 @@ md_ebayes(
   E = 0.01,
   alpha = 0.1,
   wide = FALSE,
-  weight_df = NULL,
+  weight_col = NULL,
   skip_checks = FALSE
 )
 }
@@ -35,8 +35,8 @@ md_ebayes(
 \item{wide}{Logical; if TRUE, return wide format with one column per item
 (default FALSE).}
 
-\item{weight_df}{Optional data frame with two columns: ID and "WEIGHT".
-If NULL, unweighted.}
+\item{weight_col}{Character name of a weight column in \code{long_df}, or NULL
+for unweighted analysis (default NULL).}
 
 \item{skip_checks}{Logical; if TRUE, skip the requirement that every
 respondent has both best and worst choices. Use TRUE for anchored data

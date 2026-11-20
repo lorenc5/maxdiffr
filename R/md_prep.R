@@ -251,12 +251,15 @@ md_prep <- function(survey_df, design_df,
   # Drop NAs (items not shown)
   long_df <- long_df[!is.na(long_df$y), ]
 
-  # Add weight if present
+  # Add weight if present — keeps the original column name so downstream
+
+  # functions can reference it via weight_col = "weight" (or whatever it is)
   if (!is.null(weight_col) && weight_col %in% names(survey_df)) {
-    wgt_df <- data.frame(
-      pid    = survey_df[[id_col]],
-      WEIGHT = survey_df[[weight_col]]
+    wgt_df <- stats::setNames(
+      data.frame(survey_df[[id_col]], survey_df[[weight_col]]),
+      c("pid", weight_col)
     )
+    wgt_df <- wgt_df[!duplicated(wgt_df$pid), ]
     long_df <- dplyr::left_join(long_df, wgt_df, by = "pid")
   }
 

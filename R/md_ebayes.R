@@ -14,8 +14,8 @@
 #' @param alpha Shrinkage parameter (default 0.1).
 #' @param wide Logical; if TRUE, return wide format with one column per item
 #'   (default FALSE).
-#' @param weight_df Optional data frame with two columns: ID and "WEIGHT".
-#'   If NULL, unweighted.
+#' @param weight_col Character name of a weight column in `long_df`, or NULL
+#'   for unweighted analysis (default NULL).
 #' @param skip_checks Logical; if TRUE, skip the requirement that every
 #'   respondent has both best and worst choices. Use TRUE for anchored data
 #'   (default FALSE).
@@ -59,16 +59,16 @@ md_ebayes <- function(long_df,
                       id_col = "pid", block_col = "block",
                       item_col = "message", response_col = "y",
                       E = 0.01, alpha = 0.1, wide = FALSE,
-                      weight_df = NULL, skip_checks = FALSE) {
-  if (!is.null(weight_df)) {
+                      weight_col = NULL, skip_checks = FALSE) {
+  use_weights <- !is.null(weight_col) && weight_col %in% names(long_df)
+
+  if (use_weights) {
     # Weighted path
-    colnames(weight_df) <- c(id_col, "WEIGHT")
-    data_w <- dplyr::left_join(long_df, weight_df, by = id_col)
-    split_group <- split(data_w, data_w[[item_col]])
+    split_group <- split(long_df, long_df[[item_col]])
 
     agg_dat_w <- dplyr::bind_rows(lapply(names(split_group), function(nm) {
       sg <- split_group[[nm]]
-      wt <- .wtd_table(x = sg[[response_col]], weights = sg$WEIGHT)
+      wt <- .wtd_table(x = sg[[response_col]], weights = sg[[weight_col]])
       worst_count <- if ("-1" %in% names(wt)) wt[["-1"]] else 0
       none_count <- if ("0" %in% names(wt)) wt[["0"]] else 0
       best_count <- if ("1" %in% names(wt)) wt[["1"]] else 0
@@ -85,20 +85,21 @@ md_ebayes <- function(long_df,
     agg_dat <- agg_dat[, c(item_col, "p_j")]
 
     # Individual weighted counts
-    ind_dat <- data_w |>
+    ind_dat <- long_df |>
       dplyr::group_by(.data[[id_col]], .data[[item_col]]) |>
       dplyr::summarise(
         bests = sum(.data[[response_col]] == 1),
         worsts = sum(.data[[response_col]] == -1),
         all = dplyr::n(),
-        WEIGHT = .data[["WEIGHT"]][1],
+        .wt = .data[[weight_col]][1],
         .groups = "drop"
       )
 
     # Weight the counts
-    ind_dat$bests <- ind_dat$bests * ind_dat$WEIGHT
-    ind_dat$worsts <- ind_dat$worsts * ind_dat$WEIGHT
-    ind_dat$all <- ind_dat$all * ind_dat$WEIGHT
+    ind_dat$bests <- ind_dat$bests * ind_dat$.wt
+    ind_dat$worsts <- ind_dat$worsts * ind_dat$.wt
+    ind_dat$all <- ind_dat$all * ind_dat$.wt
+    ind_dat$.wt <- NULL
 
     ind_dat$p_ij <- (ind_dat$all - ind_dat$worsts + ind_dat$bests) /
       (2 * ind_dat$all)

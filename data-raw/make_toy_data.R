@@ -114,6 +114,19 @@ for (resp in 1:n_respondents) {
 
 md_survey <- do.call(rbind, survey_rows)
 
+# ---- 2b. Add realistic survey weights ---- #
+# Simulate raked/post-stratification weights centered around 1.
+# Weights vary by party ID to mimic real-world raking adjustments
+# (e.g., over-sampled Democrats get down-weighted, under-sampled
+# Republicans get up-weighted).
+set.seed(777)
+party_adj <- c(
+  "1" = 0.85, "2" = 0.90, "3" = 1.05, "4" = 1.00,
+  "5" = 1.05, "6" = 1.10, "7" = 1.15
+)
+base_wt <- party_adj[as.character(md_survey$QPARTYID)]
+md_survey$weight <- round(base_wt * exp(rnorm(n_respondents, 0, 0.15)), 4)
+
 # ---- 3. Save as package data ---- #
 
 usethis::use_data(md_survey, overwrite = TRUE)

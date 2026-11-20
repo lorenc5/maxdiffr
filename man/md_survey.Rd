@@ -5,7 +5,7 @@
 \alias{md_survey}
 \title{Simulated MaxDiff Survey Data}
 \format{
-A data frame with 150 rows and 27 columns:
+A data frame with 150 rows and 28 columns:
 \describe{
 \item{id}{Respondent ID (1-150).}
 \item{version}{Design version (1-2).}
@@ -34,6 +34,7 @@ A data frame with 150 rows and 27 columns:
 \item{QMAXDIFF_8w}{Worst-choice item number for block 8.}
 \item{QMAXDIFF_8_anchor}{Anchor response for block 8.}
 \item{QPARTYID}{Party identification (1-7 scale; 1-2 = Dem, 3-5 = Ind, 6-7 = Rep).}
+\item{weight}{Survey weight (raked/post-stratification). Centered near 1; varies by party ID to simulate typical demographic raking adjustments.}
 }
 }
 \usage{
@@ -42,7 +43,8 @@ md_survey
 \description{
 A simulated survey dataset with 150 respondents and 8 items across 8 blocks
 with 4 items per block. Responses were generated from latent utility scores
-with added noise. Includes best/worst choices, anchor responses, and party ID.
+with added noise. Includes best/worst choices, anchor responses, party ID,
+and survey weights.
 }
 \examples{
 data(md_survey)
