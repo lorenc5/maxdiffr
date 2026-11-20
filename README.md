@@ -336,18 +336,28 @@ dem_agg |> arrange(desc(b)) |> select(message, b, choice_p)
 
 ## Weighted Analysis
 
-If you have survey weights, pass them to `md_aggregate()` and `md_ebayes()`:
+The simulated data includes a `weight` column (raked survey weights centered near 1). Pass `weight_col` to `md_prep()` so the weight is carried into the long data, then reference it in downstream functions:
 
 ```r
-# Example (not run --- simulated data has no weights)
-wgt_df <- data.frame(pid = survey$id, WEIGHT = survey$weight_var)
+# Prep with weight
+prep_w <- md_prep(
+  md_survey, md_design,
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  weight_col = "weight"
+)
 
-agg_w <- md_aggregate(prep$long, id_col = "pid", item_col = "message",
-                      response_col = "y", weight_df = wgt_df)
+# Weighted aggregate
+agg_w <- md_aggregate(prep_w$long, id_col = "pid", item_col = "message",
+                      response_col = "y", weight_col = "weight")
 
-eb_w <- md_ebayes(prep$long, id_col = "pid", block_col = "block",
+# Weighted individual scores
+eb_w <- md_ebayes(prep_w$long, id_col = "pid", block_col = "block",
                   item_col = "message", response_col = "y",
-                  weight_df = wgt_df, wide = TRUE)
+                  weight_col = "weight", wide = TRUE)
 ```
 
 ## Function Reference
