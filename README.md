@@ -312,26 +312,38 @@ md_portfolio(turf, combo = 3, id_col = "pid", top_n = 5)
 md_plot_turf(turf, id_col = "pid", title = "Cumulative Reach")
 ```
 
-## Subgroup Analysis
+## Subgroup Comparison
 
-To analyze subgroups, filter the survey before calling `md_prep()`:
+`md_subgroup()` runs the full pipeline for each subgroup and returns
+side-by-side results. First create a reusable configuration with
+`md_prep_config()`:
 
 ```r
-# Democrats (QPARTYID 1-2)
-dem_survey <- md_survey |> filter(QPARTYID %in% 1:2)
-
-dem_prep <- md_prep(
-  dem_survey, md_design,
+config <- md_prep_config(
+  design_df = md_design,
   id_col = "id", version_col = "version",
   best_prefix = "QMAXDIFF_", best_suffix = "b",
   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
   n_blocks = 8, n_items = 8, items_per_block = 4,
-  item_labels = md_items$item_label
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_",
+  anchor_suffix = "_anchor",
+  weight_col = "weight"
 )
 
-dem_agg <- md_aggregate(dem_prep$long, id_col = "pid",
-                        item_col = "message", response_col = "y")
-dem_agg |> arrange(desc(b)) |> select(message, b, choice_p)
+results <- md_subgroup(
+  md_survey, config,
+  group_col = "QPARTYID",
+  groups = list(Democrat = 1:2, Independent = 3:5, Republican = 6:7),
+  turf = TRUE, turf_combo = 2, turf_top_n = 5
+)
+
+results                  # print summary
+results$wide$aggregate   # side-by-side betas and choice probabilities
+results$wide$anchor      # side-by-side anchored 100-point scores
+results$aggregate        # long format for ggplot
+results$turf             # TURF portfolios by subgroup
+results$n_per_group      # sample sizes
 ```
 
 ## Weighted Analysis
@@ -367,10 +379,12 @@ eb_w <- md_ebayes(prep_w$long, id_col = "pid", block_col = "block",
 | Design | `md_make_design()` | Generate IBD survey design |
 | Validate | `md_validate()` | Check responses against design |
 | Prep | `md_prep()` | Raw survey to long-format BW data |
+| Prep | `md_prep_config()` | Reusable config for `md_prep()` parameters |
 | Aggregate | `md_aggregate()` | Item-level betas + choice probabilities |
 | Individual | `md_ebayes()` | Per-respondent empirical Bayes scores |
 | Anchor | `md_anchor_100()` | Absolute 100-point scale (aggregate) |
 | Anchor | `md_ind_anchor_100()` | Absolute 100-point scale (individual) |
+| Subgroup | `md_subgroup()` | Side-by-side comparison across subgroups |
 | TURF | `md_turf_matrix()` | Binary reach matrix |
 | TURF | `md_portfolio()` | Portfolio optimization |
 | Plot | `md_plot_beta()` | Beta dot-and-whisker |

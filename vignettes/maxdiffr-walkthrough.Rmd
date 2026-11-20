@@ -296,30 +296,86 @@ md_portfolio(turf, combo = 3, id_col = "pid", top_n = 5)
 md_plot_turf(turf, id_col = "pid", title = "Cumulative Reach")
 ```
 
-## Subgroup Analysis
+## Subgroup Comparison
 
-To analyze subgroups, subset the survey before calling `md_prep()`:
+`md_subgroup()` runs the full pipeline for each subgroup in a single call and
+returns side-by-side results. First create a reusable configuration object with
+`md_prep_config()`:
 
-```{r subgroups}
-# Democrats (QPARTYID 1-2)
-dem_survey <- md_survey |> dplyr::filter(QPARTYID %in% 1:2)
-
-dem_prep <- md_prep(
-  dem_survey, md_design,
+```{r subgroup-config}
+config <- md_prep_config(
+  design_df = md_design,
   id_col = "id", version_col = "version",
   best_prefix = "QMAXDIFF_", best_suffix = "b",
   worst_prefix = "QMAXDIFF_", worst_suffix = "w",
   n_blocks = 8, n_items = 8, items_per_block = 4,
-  item_labels = md_items$item_label
+  item_labels = md_items$item_label,
+  weight_col = "weight"
+)
+```
+
+Then call `md_subgroup()` with a grouping column and named list of values:
+
+```{r subgroup-run}
+results <- md_subgroup(
+  md_survey, config,
+  group_col = "QPARTYID",
+  groups = list(Democrat = 1:2, Independent = 3:5, Republican = 6:7),
+  turf = TRUE, turf_combo = 2, turf_top_n = 5
+)
+results
+```
+
+The returned object contains long-format data frames for plotting and wide
+tables for comparison:
+
+```{r subgroup-wide}
+# Side-by-side aggregate betas and choice probabilities
+results$wide$aggregate
+
+# Long format is tidy and ready for ggplot
+results$aggregate |>
+  dplyr::filter(message != "ANCHOR") |>
+  ggplot2::ggplot(ggplot2::aes(
+    x = stats::reorder(message, b),
+    y = b, colour = subgroup
+  )) +
+  ggplot2::geom_point(size = 2, position = ggplot2::position_dodge(0.4)) +
+  ggplot2::coord_flip() +
+  ggplot2::labs(x = NULL, y = "Beta", colour = "Subgroup") +
+  ggplot2::theme_minimal()
+```
+
+```{r subgroup-turf}
+# TURF portfolios by subgroup
+results$turf
+```
+
+### Anchored subgroup comparison
+
+Pass `anchor_prefix` in the config to get anchored results for each subgroup:
+
+```{r subgroup-anchor}
+config_anc <- md_prep_config(
+  design_df = md_design,
+  id_col = "id", version_col = "version",
+  best_prefix = "QMAXDIFF_", best_suffix = "b",
+  worst_prefix = "QMAXDIFF_", worst_suffix = "w",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_",
+  anchor_suffix = "_anchor",
+  weight_col = "weight"
 )
 
-dem_agg <- md_aggregate(dem_prep$long,
-  id_col = "pid",
-  item_col = "message", response_col = "y"
+results_anc <- md_subgroup(
+  md_survey, config_anc,
+  group_col = "QPARTYID",
+  groups = list(Democrat = 1:2, Republican = 6:7)
 )
-dem_agg |>
-  dplyr::arrange(dplyr::desc(b)) |>
-  dplyr::select(message, b, choice_p)
+
+# Side-by-side anchored 100-point scores
+results_anc$wide$anchor
 ```
 
 ## Weighted Analysis

@@ -6,7 +6,7 @@ NULL
 # Suppress R CMD check NOTEs for NSE / ggplot2 aes() variables
 utils::globalVariables(c(
   "b", "lb", "ub", "bests", "worsts", "thresh100",
-  "n_items", "label", "message", "reach", "cut"
+  "n_items", "label", "message", "reach", "cut", "subgroup"
 ))
 
 #' Weighted percent for a binary (0/1) column
