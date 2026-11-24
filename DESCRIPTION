@@ -1,6 +1,6 @@
 Package: maxdiffr
 Title: MaxDiff (Best-Worst Scaling) Analysis Pipeline
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Loren", "Collingwood", email = "loren.collingwood@gmail.com",
                   role = c("aut", "cre"))
 Description: A complete pipeline for MaxDiff (Best-Worst Scaling) survey analysis.
