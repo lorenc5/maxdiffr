@@ -25,6 +25,14 @@
 #' @param anchor_prefix Character prefix for anchor columns, or NULL for
 #'   standard (non-anchored) prep. When set, adds an ANCHOR pseudo-item.
 #' @param anchor_suffix Character suffix for anchor columns (default "_anchor").
+#' @param anchor_coding How ALL and NONE screens are coded when anchored.
+#'   `"drop_choices"` (default, original behavior): the screen's best and worst
+#'   picks are set to 0 and only the ANCHOR pseudo-item carries information
+#'   (-1 for ALL, +1 for NONE). `"keep_choices"`: ALL keeps the best pick (+1)
+#'   with ANCHOR as worst (-1); NONE keeps the worst pick (-1) with ANCHOR as
+#'   best (+1). `"keep_choices"` retains the preference information on those
+#'   screens and gives more conservative anchored scores. For model-based
+#'   anchoring see [md_anchor_logit()] and [md_hb()].
 #' @param weight_col Character name of weight column in `survey_df`, or NULL.
 #'
 #' @return A list with:
@@ -68,7 +76,9 @@ md_prep <- function(survey_df, design_df,
                     n_blocks = 12, n_items = 12, items_per_block = 4,
                     item_labels = NULL,
                     anchor_prefix = NULL, anchor_suffix = "_anchor",
+                    anchor_coding = c("drop_choices", "keep_choices"),
                     weight_col = NULL) {
+  anchor_coding <- match.arg(anchor_coding)
   if (is.null(item_labels)) {
     item_labels <- paste0("Item_", seq_len(n_items))
   }
@@ -175,10 +185,17 @@ md_prep <- function(survey_df, design_df,
         if (is.na(anc_resp)) next
 
         if (anc_resp == 1 || anc_resp == 3) {
-          # ALL or NONE: zero out existing best/worst,
-          # assign anchor = -1 (ALL) or +1 (NONE)
+          # ALL or NONE: anchor = -1 (ALL) or +1 (NONE).
+          # drop_choices: zero out the screen's best and worst picks.
+          # keep_choices: ALL keeps best, NONE keeps worst.
+          keep_val <- if (anchor_coding == "keep_choices") {
+            if (anc_resp == 1) 1 else -1
+          } else {
+            NA
+          }
           for (col_name in item_y_cols) {
-            if (!is.na(bw_dat_all[i, col_name])) {
+            v <- bw_dat_all[i, col_name]
+            if (!is.na(v) && !(!is.na(keep_val) && v == keep_val)) {
               bw_dat_all[i, col_name] <- 0
             }
           }

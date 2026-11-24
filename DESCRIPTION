@@ -6,18 +6,20 @@ Authors@R: person("Loren", "Collingwood", email = "loren.collingwood@gmail.com",
 Description: A complete pipeline for MaxDiff (Best-Worst Scaling) survey analysis.
     Includes IBD design generation, response validation, data preparation (standard
     and anchored), aggregate and individual-level analysis via empirical Bayes,
-    anchored 100-point scaling, TURF analysis with portfolio optimization, and
+    anchored 100-point scaling, model-based anchoring (conditional logit and
+    hierarchical Bayes via 'Stan'), TURF analysis with portfolio optimization, and
     publication-ready plots.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     dplyr,
     tidyr,
     ggplot2,
     rlang,
     stats,
+    survival,
     utils
 Depends:
     R (>= 4.1)
@@ -25,5 +27,8 @@ LazyData: true
 Suggests:
     ibd,
     knitr,
-    rmarkdown
+    rmarkdown,
+    rstan,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
 VignetteBuilder: knitr

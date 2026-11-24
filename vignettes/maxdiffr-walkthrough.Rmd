@@ -273,6 +273,74 @@ ind_a100 |>
   head()
 ```
 
+## Step 5b: Model-Based Anchoring and Hierarchical Bayes
+
+The default anchored coding above drops the best and worst picks on screens
+answered ALL or NONE. Three alternatives keep that information.
+
+**Counts, keeping the picks.** ALL keeps the best pick; NONE keeps the worst.
+
+```{r anchor-keep}
+prep_keep <- md_prep(
+  md_survey, md_design,
+  id_col = "id", version_col = "version",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_", anchor_suffix = "_anchor",
+  anchor_coding = "keep_choices"
+)
+agg_keep <- md_aggregate(prep_keep$long,
+  id_col = "pid",
+  item_col = "message", response_col = "y"
+)
+md_anchor_100(agg_keep) |>
+  dplyr::select(message, thresh100) |>
+  dplyr::arrange(dplyr::desc(thresh100))
+```
+
+**Conditional logit.** The anchor becomes a threshold alternative with utility
+fixed at 0. `score100` = 100 x exp(utility); standard errors are clustered by
+respondent.
+
+```{r anchor-logit}
+scr <- md_screens(
+  md_survey, md_design,
+  id_col = "id", version_col = "version",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_", anchor_suffix = "_anchor"
+)
+md_anchor_logit(scr)
+md_anchor_logit(scr, coding = "dual_response")
+```
+
+**Who moves?** Respondents who answer NONE (or ALL) on every screen make
+anchored levels less robust.
+
+```{r anchor-patterns}
+pat <- md_anchor_patterns(scr)
+pat$patterns
+pat$exposure
+```
+
+**Hierarchical Bayes.** `md_hb()` estimates each respondent's utilities
+relative to their own threshold with a Stan model (compiled on first use; needs
+`rstan`). The chunks below are not run when building the vignette.
+
+```{r anchor-hb, eval = FALSE}
+hb <- md_hb(scr, chains = 4, iter = 1500, cores = 4)
+hb
+
+# % of respondents each message moves past their own threshold
+md_hb_summary(hb, groups = list(
+  overall = md_survey$id,
+  dem = md_survey$id[md_survey$QPARTYID <= 2]
+))
+
+# Anchored TURF: reached = at least one message in the set clears the threshold
+md_hb_turf(hb, combo = 1:3)
+```
+
 ## Step 6: TURF Analysis
 
 TURF (Total Unduplicated Reach and Frequency) answers: "If I can only use N

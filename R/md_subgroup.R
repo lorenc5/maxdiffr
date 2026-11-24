@@ -52,20 +52,20 @@ md_prep_config <- function(design_df,
                            anchor_suffix = "_anchor",
                            weight_col = NULL) {
   config <- list(
-    design_df      = design_df,
-    id_col         = id_col,
-    version_col    = version_col,
-    best_prefix    = best_prefix,
-    best_suffix    = best_suffix,
-    worst_prefix   = worst_prefix,
-    worst_suffix   = worst_suffix,
-    n_blocks       = n_blocks,
-    n_items        = n_items,
+    design_df = design_df,
+    id_col = id_col,
+    version_col = version_col,
+    best_prefix = best_prefix,
+    best_suffix = best_suffix,
+    worst_prefix = worst_prefix,
+    worst_suffix = worst_suffix,
+    n_blocks = n_blocks,
+    n_items = n_items,
     items_per_block = items_per_block,
-    item_labels    = item_labels,
-    anchor_prefix  = anchor_prefix,
-    anchor_suffix  = anchor_suffix,
-    weight_col     = weight_col
+    item_labels = item_labels,
+    anchor_prefix = anchor_prefix,
+    anchor_suffix = anchor_suffix,
+    weight_col = weight_col
   )
   class(config) <- "md_prep_config"
   config
@@ -142,10 +142,12 @@ md_prep_config <- function(design_df,
     # md_ebayes wide output does not include the weight column;
     # join it back so md_turf_matrix can use it
     if (!is.null(config$weight_col) &&
-        config$weight_col %in% names(survey_df)) {
+      config$weight_col %in% names(survey_df)) {
       wgt_df <- stats::setNames(
-        data.frame(survey_df[[config$id_col]],
-                   survey_df[[config$weight_col]]),
+        data.frame(
+          survey_df[[config$id_col]],
+          survey_df[[config$weight_col]]
+        ),
         c("pid", config$weight_col)
       )
       wgt_df <- wgt_df[!duplicated(wgt_df$pid), ]
@@ -236,7 +238,6 @@ md_subgroup <- function(survey_df, prep_config, group_col, groups,
                         include_full = TRUE, full_label = "Full Sample",
                         turf = FALSE, turf_combo = 1, turf_top_n = 10,
                         ci_level = 0.95, ebayes_alpha = 0.1) {
-
   if (!inherits(prep_config, "md_prep_config")) {
     stop("`prep_config` must be created by md_prep_config()")
   }
@@ -254,22 +255,24 @@ md_subgroup <- function(survey_df, prep_config, group_col, groups,
 
   for (nm in names(groups)) {
     sub_df <- survey_df[survey_df[[group_col]] %in% groups[[nm]], ]
-    n_sub  <- nrow(sub_df)
+    n_sub <- nrow(sub_df)
     if (n_sub == 0) {
       warning("Subgroup '", nm, "' has 0 respondents; skipping.")
       next
     }
     if (n_sub < 30) {
-      warning("Subgroup '", nm, "' has only ", n_sub,
-              " respondents; estimates may be unstable.")
+      warning(
+        "Subgroup '", nm, "' has only ", n_sub,
+        " respondents; estimates may be unstable."
+      )
     }
     subgroup_dfs[[nm]] <- sub_df
   }
 
   # Run pipeline for each subgroup -------------------------------------
   n_per_group <- integer(0)
-  agg_list  <- list()
-  anc_list  <- list()
+  agg_list <- list()
+  anc_list <- list()
   turf_list <- list()
 
   for (nm in names(subgroup_dfs)) {
@@ -301,9 +304,9 @@ md_subgroup <- function(survey_df, prep_config, group_col, groups,
   }
 
   # Combine into long data frames --------------------------------------
-  agg_long  <- dplyr::bind_rows(agg_list)
-  anc_long  <- if (length(anc_list) > 0)  dplyr::bind_rows(anc_list)  else NULL
-  turf_long <- if (length(turf_list) > 0)  dplyr::bind_rows(turf_list) else NULL
+  agg_long <- dplyr::bind_rows(agg_list)
+  anc_long <- if (length(anc_list) > 0) dplyr::bind_rows(anc_list) else NULL
+  turf_long <- if (length(turf_list) > 0) dplyr::bind_rows(turf_list) else NULL
 
   # Build wide tables --------------------------------------------------
   wide <- list()

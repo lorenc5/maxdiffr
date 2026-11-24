@@ -19,6 +19,7 @@ md_prep(
   item_labels = NULL,
   anchor_prefix = NULL,
   anchor_suffix = "_anchor",
+  anchor_coding = c("drop_choices", "keep_choices"),
   weight_col = NULL
 )
 }
@@ -53,6 +54,15 @@ blocks per version — duplicates by pid are handled).}
 standard (non-anchored) prep. When set, adds an ANCHOR pseudo-item.}
 
 \item{anchor_suffix}{Character suffix for anchor columns (default "_anchor").}
+
+\item{anchor_coding}{How ALL and NONE screens are coded when anchored.
+\code{"drop_choices"} (default, original behavior): the screen's best and worst
+picks are set to 0 and only the ANCHOR pseudo-item carries information
+(-1 for ALL, +1 for NONE). \code{"keep_choices"}: ALL keeps the best pick (+1)
+with ANCHOR as worst (-1); NONE keeps the worst pick (-1) with ANCHOR as
+best (+1). \code{"keep_choices"} retains the preference information on those
+screens and gives more conservative anchored scores. For model-based
+anchoring see \code{\link[=md_anchor_logit]{md_anchor_logit()}} and \code{\link[=md_hb]{md_hb()}}.}
 
 \item{weight_col}{Character name of weight column in \code{survey_df}, or NULL.}
 }
