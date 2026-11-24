@@ -67,6 +67,8 @@ Standard MaxDiff produces **relative** scores --- you learn that item A is prefe
 
 This response is coded as a pseudo-item called ANCHOR. If a respondent says ALL are important, the anchor is treated as *worse* than the shown items (anchor = -1 in the BW coding). If NONE are important, the anchor is *better* than the shown items (anchor = 1). SOME places the anchor in the middle (anchor = 0). After estimation, all item scores are rescaled relative to the anchor = 100 on a 100-point scale. Items scoring above 100 are genuinely valued; items below 100 are not.
 
+This counts-based coding is one of several. Model-based alternatives treat the anchor as a threshold with utility fixed at zero: a conditional logit for the aggregate, and a hierarchical Bayes model in Stan for respondent-level results. See [Step 5b](#step-5b-model-based-anchoring-and-hierarchical-bayes).
+
 ## Installation
 
 ```r
@@ -84,7 +86,7 @@ The pipeline has six stages:
 2. **Validate** --- Check that survey responses match the design
 3. **Prep** --- Convert raw survey data to long-format BW data
 4. **Analyze** --- Aggregate and individual-level scoring
-5. **Anchor** --- Convert to absolute 100-point scale (optional)
+5. **Anchor** --- Absolute scale via counts, conditional logit, or hierarchical Bayes (optional)
 6. **TURF** --- Portfolio optimization
 
 ## Load the Package and Data
@@ -290,6 +292,94 @@ ind_a100 <- md_ind_anchor_100(eb_anc, id_col = "pid", item_col = "message")
 ind_a100 |> select(1:5) |> head()
 ```
 
+## Step 5b: Model-Based Anchoring and Hierarchical Bayes
+
+The counts-based anchoring in Step 5 is quick, but how the ALL and NONE screens are coded matters a lot. The default `md_prep()` coding (`anchor_coding = "drop_choices"`) throws away the respondent's best and worst picks on those screens. That can push anchored scores well above what the other codings give. `maxdiffr` offers three more defensible alternatives, from simplest to richest.
+
+### Option A: keep the picks on ALL/NONE screens (counts)
+
+```r
+prep_keep <- md_prep(
+  md_survey, md_design,
+  id_col = "id", version_col = "version",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_", anchor_suffix = "_anchor",
+  anchor_coding = "keep_choices"  # ALL keeps best; NONE keeps worst
+)
+agg_keep <- md_aggregate(prep_keep$long, id_col = "pid", item_col = "message", response_col = "y")
+md_anchor_100(agg_keep)
+```
+
+### Option B: conditional logit with the threshold fixed at zero
+
+`md_screens()` builds a respondent x screen table (items shown, best, worst, anchor answer). `md_anchor_logit()` then fits a pooled conditional logit in which the anchor is a "threshold" alternative with utility fixed at 0. Standard errors are clustered by respondent.
+
+```r
+scr <- md_screens(
+  md_survey, md_design,
+  id_col = "id", version_col = "version",
+  n_blocks = 8, n_items = 8, items_per_block = 4,
+  item_labels = md_items$item_label,
+  anchor_prefix = "QMAXDIFF_", anchor_suffix = "_anchor"
+)
+
+md_anchor_logit(scr)                              # implied_pairs coding (default)
+md_anchor_logit(scr, coding = "dual_response")    # threshold as an extra alternative
+md_anchor_logit(scr, ids = md_survey$id[md_survey$QPARTYID <= 2])  # a subgroup
+```
+
+`score100 = 100 x exp(b)`: 100 means the average respondent is as likely as not to put the message above their threshold.
+
+The two codings (see `?md_anchor_tasks`) are:
+
+| Coding | ALL screen | SOME screen | NONE screen |
+|---|---|---|---|
+| `implied_pairs` | best & worst among the 4, plus each item beats the threshold | best & worst, plus best beats threshold and threshold beats worst | best & worst, plus the threshold beats each item |
+| `dual_response` | threshold added as a 5th alternative; best = original best, worst = threshold | best & worst among all 5 | best = threshold, worst = original worst |
+
+### Option C: hierarchical Bayes (individual-level)
+
+`md_hb()` fits a hierarchical Bayes multinomial logit on the same coded tasks, giving **every respondent their own utility for each message relative to their own threshold**. Respondent utilities come from a multivariate normal population (mean `mu`, scales `tau`, LKJ(2) correlation prior, non-centered parameterization).
+
+```r
+hb <- md_hb(scr, chains = 4, iter = 1500, cores = 4)   # needs rstan
+hb                                                     # R-hat, n_eff, divergences
+
+# % of respondents for whom each message clears their own threshold,
+# with posterior intervals; optional subgroups compared with everyone else
+groups <- list(
+  overall = md_survey$id,
+  dem     = md_survey$id[md_survey$QPARTYID <= 2]
+)
+md_hb_summary(hb, groups = groups)
+
+md_hb_scores(hb)             # respondent x message utilities and P(above threshold)
+md_hb_turf(hb, combo = 1:3)  # anchored TURF; attr(, "ceiling") = reach of all messages
+```
+
+`md_hb_summary()` reports two quantities:
+
+- **`pct_above`**: the share of respondents for whom the message is above their own threshold. This is usually the most robust anchored number. It changes little across codings, and it describes the sample directly even when respondents split into "moved by everything" and "moved by nothing" camps.
+- **`typical`**: 100 x exp(mean utility), the threshold score of the average respondent.
+
+`md_hb_turf()` counts a respondent as reached if **at least one** message in the set clears their threshold. This is persuasion reach, not "top message" reach.
+
+**How it runs.** The model is written in [Stan](https://mc-stan.org) and ships in `inst/stan/hb_mnl_anchor.stan`. There is no hand-written C++ or Rcpp. `rstan` translates the Stan program into C++, compiles it the first time `md_hb()` is called in a session (about a minute; it is cached afterwards), and runs the No-U-Turn sampler as native code. R only builds the data (`md_hb_data()`) and summarizes the draws. `rstan` is a suggested dependency, so the rest of the package installs without a C++ toolchain. To use `cmdstanr` instead, pass `md_hb_data(scr)$data` to the same `.stan` file.
+
+As a rough guide, 800 respondents x 12 screens x 12 messages takes about 15 minutes with 4 chains of 1,500 iterations.
+
+### How robust are anchored results? `md_anchor_patterns()`
+
+```r
+pat <- md_anchor_patterns(scr)
+pat$screens      # % of screens answered ALL / SOME / NONE
+pat$patterns     # % of respondents answering NONE (or ALL, or SOME) on every screen
+pat$exposure     # per message: % of exposures clearly moved / not moved / undetermined
+```
+
+If a large share of respondents answer NONE on every screen, the threshold reflects fixed dispositions more than the messages. Anchored levels then depend on modeling choices, while the ranking of messages stays stable. Report anchored results with that caveat.
+
 ## Step 6: TURF Analysis
 
 TURF (Total Unduplicated Reach and Frequency) answers: "If I can only use N messages, which combination reaches the most people?"
@@ -384,6 +474,15 @@ eb_w <- md_ebayes(prep_w$long, id_col = "pid", block_col = "block",
 | Individual | `md_ebayes()` | Per-respondent empirical Bayes scores |
 | Anchor | `md_anchor_100()` | Absolute 100-point scale (aggregate) |
 | Anchor | `md_ind_anchor_100()` | Absolute 100-point scale (individual) |
+| Anchor | `md_screens()` | Respondent x screen table (shown items, picks, anchor) |
+| Anchor | `md_anchor_tasks()` | Code screens as `implied_pairs` or `dual_response` tasks |
+| Anchor | `md_anchor_logit()` | Conditional logit, threshold fixed at 0, clustered SEs |
+| Anchor | `md_anchor_patterns()` | Who moves: anchor answer patterns and per-message exposure |
+| HB | `md_hb()` | Hierarchical Bayes anchored MNL (Stan via rstan) |
+| HB | `md_hb_data()` | Stan data list (for fitting with cmdstanr etc.) |
+| HB | `md_hb_summary()` | % above own threshold + typical score, by subgroup |
+| HB | `md_hb_scores()` | Respondent-level utilities and P(above threshold) |
+| HB | `md_hb_turf()` | Anchored TURF (reach = at least one message clears threshold) |
 | Subgroup | `md_subgroup()` | Side-by-side comparison across subgroups |
 | TURF | `md_turf_matrix()` | Binary reach matrix |
 | TURF | `md_portfolio()` | Portfolio optimization |
