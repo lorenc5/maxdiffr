@@ -294,7 +294,7 @@ ind_a100 |> select(1:5) |> head()
 
 ## Step 5b: Model-Based Anchoring and Hierarchical Bayes
 
-The counts-based anchoring in Step 5 is quick, but how the ALL and NONE screens are coded matters a lot. The default `md_prep()` coding (`anchor_coding = "drop_choices"`) throws away the respondent's best and worst picks on those screens. That can push anchored scores well above what the other codings give. `maxdiffr` offers three more defensible alternatives, from simplest to richest.
+The counts-based anchoring in Step 5 is quick, but how the ALL and NONE screens are coded matters a lot. The default `md_prep()` coding (`anchor_coding = "drop_choices"`) throws away the respondent's best and worst picks on those screens. `maxdiffr` offers three more defensible alternatives, from simplest to richest.
 
 ### Option A: keep the picks on ALL/NONE screens (counts)
 
@@ -341,6 +341,31 @@ The two codings (see `?md_anchor_tasks`) are:
 ### Option C: hierarchical Bayes (individual-level)
 
 `md_hb()` fits a hierarchical Bayes multinomial logit on the same coded tasks, giving **every respondent their own utility for each message relative to their own threshold**. Respondent utilities come from a multivariate normal population (mean `mu`, scales `tau`, LKJ(2) correlation prior, non-centered parameterization).
+
+### The HB Anchored Model
+
+Let $\beta_{nj}$ be respondent $n$'s utility for message $j$, measured relative to their own threshold, which is fixed at zero ($\beta_{n0} = 0$). On a screen showing the set $S$, the best and worst picks follow a multinomial logit:
+
+$$P(\text{best} = j \mid S) = \frac{e^{\beta_{nj}}}{\sum_{k \in S} e^{\beta_{nk}}}, \qquad P(\text{worst} = j \mid S) = \frac{e^{-\beta_{nj}}}{\sum_{k \in S} e^{-\beta_{nk}}}$$
+
+Under `implied_pairs` coding, each message-vs-threshold comparison that the anchor answer implies adds a binary logit term:
+
+$$P(\text{message } j \text{ beats the threshold}) = \frac{e^{\beta_{nj}}}{1 + e^{\beta_{nj}}}$$
+
+Under `dual_response` coding, the threshold (utility 0) simply joins $S$ as an extra alternative. Respondent utilities share a multivariate normal population distribution:
+
+$$\boldsymbol{\beta}_n \sim \text{MVN}\!\left(\boldsymbol{\mu},\ \text{diag}(\boldsymbol{\tau})\,\boldsymbol{\Omega}\,\text{diag}(\boldsymbol{\tau})\right)$$
+
+with priors
+
+$$\mu_j \sim N(0, 2^2), \qquad \tau_j \sim N^{+}(0, 1.5^2), \qquad \boldsymbol{\Omega} \sim \text{LKJ}(2)$$
+
+The model is fit with a non-centered parameterization, $\boldsymbol{\beta}_n = \boldsymbol{\mu} + \text{diag}(\boldsymbol{\tau})\,\mathbf{L}_{\Omega}\,\mathbf{z}_n$ with $\mathbf{z}_n \sim N(\mathbf{0}, \mathbf{I})$. Over posterior draws $d = 1, \dots, D$, the share of respondents a message moves (`pct_above`) and the anchored TURF reach of a message set $M$ are:
+
+$$\text{PctAbove}_j = \frac{100}{D} \sum_{d=1}^{D} \frac{1}{N} \sum_{n=1}^{N} \mathbb{1}\!\left[\beta_{nj}^{(d)} > 0\right], \qquad \text{Reach}(M) = \frac{100}{N} \sum_{n=1}^{N} \left[ 1 - \prod_{j \in M} \left(1 - p_{nj}\right) \right]$$
+
+where $p_{nj} = \frac{1}{D}\sum_{d} \mathbb{1}[\beta_{nj}^{(d)} > 0]$ is the posterior probability that message $j$ clears respondent $n$'s threshold.
+
 
 ```r
 hb <- md_hb(scr, chains = 4, iter = 1500, cores = 4)   # needs rstan
