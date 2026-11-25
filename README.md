@@ -174,7 +174,7 @@ Items not shown in a given block are excluded (not coded as 0 --- they simply do
 
 The beta coefficient for each item $i$ is the log-ratio of best to worst counts:
 
-$$\beta_i = \ln\!\left(\frac{B_i}{W_i}\right)$$
+$$\beta_i = \ln\left(\frac{B_i}{W_i}\right)$$
 
 where $B_i$ and $W_i$ are the number of times item $i$ was chosen as best and worst, respectively. A continuity correction of 0.5 is applied when either count is zero.
 
@@ -354,17 +354,25 @@ $$P(\text{message } j \text{ beats the threshold}) = \frac{e^{\beta_{nj}}}{1 + e
 
 Under `dual_response` coding, the threshold (utility 0) simply joins $S$ as an extra alternative. Respondent utilities share a multivariate normal population distribution:
 
-$$\boldsymbol{\beta}_n \sim \text{MVN}\!\left(\boldsymbol{\mu},\ \text{diag}(\boldsymbol{\tau})\,\boldsymbol{\Omega}\,\text{diag}(\boldsymbol{\tau})\right)$$
+$$\boldsymbol{\beta}_n \sim \text{MVN}\left(\boldsymbol{\mu},\ \text{diag}(\boldsymbol{\tau})\ \boldsymbol{\Omega}\ \text{diag}(\boldsymbol{\tau})\right)$$
 
 with priors
 
 $$\mu_j \sim N(0, 2^2), \qquad \tau_j \sim N^{+}(0, 1.5^2), \qquad \boldsymbol{\Omega} \sim \text{LKJ}(2)$$
 
-The model is fit with a non-centered parameterization, $\boldsymbol{\beta}_n = \boldsymbol{\mu} + \text{diag}(\boldsymbol{\tau})\,\mathbf{L}_{\Omega}\,\mathbf{z}_n$ with $\mathbf{z}_n \sim N(\mathbf{0}, \mathbf{I})$. Over posterior draws $d = 1, \dots, D$, the share of respondents a message moves (`pct_above`) and the anchored TURF reach of a message set $M$ are:
+The model is fit with a non-centered parameterization, where $\mathbf{L}$ is the Cholesky factor of $\boldsymbol{\Omega}$:
 
-$$\text{PctAbove}_j = \frac{100}{D} \sum_{d=1}^{D} \frac{1}{N} \sum_{n=1}^{N} \mathbb{1}\!\left[\beta_{nj}^{(d)} > 0\right], \qquad \text{Reach}(M) = \frac{100}{N} \sum_{n=1}^{N} \left[ 1 - \prod_{j \in M} \left(1 - p_{nj}\right) \right]$$
+$$\boldsymbol{\beta}_n = \boldsymbol{\mu} + \text{diag}(\boldsymbol{\tau})\ \mathbf{L}\ \mathbf{z}_n, \qquad \mathbf{z}_n \sim N(\mathbf{0}, \mathbf{I})$$
 
-where $p_{nj} = \frac{1}{D}\sum_{d} \mathbb{1}[\beta_{nj}^{(d)} > 0]$ is the posterior probability that message $j$ clears respondent $n$'s threshold.
+Over posterior draws $d = 1, \dots, D$, the share of respondents a message moves (`pct_above`) and the anchored TURF reach of a message set $M$ are:
+
+$$\text{PctAbove}_j = \frac{100}{D} \sum_{d=1}^{D} \frac{1}{N} \sum_{n=1}^{N} \mathbb{1}\left[\beta_{nj}^{(d)} \gt 0\right], \qquad \text{Reach}(M) = \frac{100}{N} \sum_{n=1}^{N} \left[ 1 - \prod_{j \in M} \left(1 - p_{nj}\right) \right]$$
+
+where
+
+$$p_{nj} = \frac{1}{D}\sum_{d=1}^{D} \mathbb{1}\left[\beta_{nj}^{(d)} \gt 0\right]$$
+
+is the posterior probability that message $j$ clears respondent $n$'s threshold.
 
 
 ```r
